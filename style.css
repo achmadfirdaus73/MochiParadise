@@ -1,0 +1,32 @@
+.product-card {
+            overflow: hidden;
+            position: relative;
+            cursor: pointer;
+        }
+.product-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 100%; 
+            background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.8) 50%, rgba(0,0,0,0) 100%);
+            color: white;
+            opacity: 0;
+            transition: opacity 0.3s ease-out;
+        }
+.product-card:hover .product-overlay {
+            opacity: 1;
+        }
+.product-card .v-img__img {
+            transition: transform 0.4s ease-in-out;
+        }
+.product-card:hover .v-img__img {
+            transform: scale(1.1);
+        }
+.product-title {
+            font-weight: 500;
+        }
+        /* Style di bawah ini sudah tidak terpakai lagi, tapi tidak apa-apa jika tidak dihapus */
+.app-bar-search .v-input__control {
+            margin-top: 24px !important;
+        }

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mochi Paradise</title>
+
+    <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@mdi/font@latest/css/materialdesignicons.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/vuetify@3.6.10/dist/vuetify.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    
+
+</head>
+<body>
+    <div id="app">
+        <v-app>
+            <v-app-bar app color="white" flat>
+                <v-container class="d-flex align-center">
+                    <v-app-bar-title class="font-weight-bold">Mochi Paradise ✨</v-app-bar-title>
+                    <v-spacer></v-spacer>
+                    <v-badge :content="cartItems.length" color="orange-darken-2" :model-value="cartItems.length > 0">
+                      <v-btn icon @click="isCartDrawerOpen = !isCartDrawerOpen"><v-icon>mdi-cart-outline</v-icon></v-btn>
+                    </v-badge>
+                </v-container>
+            </v-app-bar>
+
+            <v-navigation-drawer v-model="isCartDrawerOpen" location="right" temporary width="350">
+                <v-list>
+                    <v-list-item>
+                        <v-list-item-title class="text-h6 font-weight-bold">Keranjang Belanja</v-list-item-title>
+                        <template v-slot:append>
+                            <v-btn icon="mdi-close" variant="text" @click="isCartDrawerOpen = false"></v-btn>
+                        </template>
+                    </v-list-item>
+                    <v-divider></v-divider>
+                </v-list>
+                <div v-if="cartItems.length > 0">
+                    <v-list-item v-for="(item, index) in cartItems" :key="index">
+                        <template v-slot:prepend>
+                            <v-avatar rounded="lg"><v-img :src="item.image" cover></v-img></v-avatar>
+                        </template>
+                        <v-list-item-title>{{ item.name }}</v-list-item-title>
+                        <v-list-item-subtitle>Rp{{ item.price.toLocaleString('id-ID') }}</v-list-item-subtitle>
+                        <template v-slot:append>
+                            <v-btn 
+                                icon="mdi-delete-outline" 
+                                variant="text" 
+                                color="grey"
+                                size="small"
+                                @click="removeFromCart(index)"
+                            ></v-btn>
+                        </template>
+                    </v-list-item>
+                </div>
+                <div v-else class="text-center text-grey pa-8">
+                    <v-icon size="x-large">mdi-cart-off</v-icon>
+                    <p class="mt-2">Keranjangmu masih kosong.</p>
+                </div>
+                <template v-slot:append>
+                    <div class="pa-4">
+                        <div class="d-flex justify-space-between font-weight-bold mb-4">
+                            <span>Total Harga:</span>
+                            <span>Rp{{ cartTotal.toLocaleString('id-ID') }}</span>
+                        </div>
+                        <v-btn 
+                            block 
+                            color="green-darken-2" 
+                            :disabled="cartItems.length === 0"
+                            prepend-icon="mdi-whatsapp"
+                            @click="processPreOrder"
+                        >
+                            Pre-Order via WhatsApp
+                        </v-btn>
+                    </div>
+                </template>
+            </v-navigation-drawer>
+
+            <v-main class="bg-grey-lighten-4">
+                <v-container>
+                    <h3 class="text-h5 font-weight-bold mb-2">Paling Laris & Bikin Nagih!</h3>
+                    <v-text-field v-model="searchTerm" label="Cari mochi favoritmu..." variant="solo" prepend-inner-icon="mdi-magnify" clearable class="mb-6"></v-text-field>
+                    <div v-if="productRows.length > 0">
+                        <div v-for="(row, rowIndex) in productRows" :key="rowIndex">
+                            <v-row>
+                                <v-col v-for="product in row.products" :key="product.id" :cols="row.cols.xs" :sm="row.cols.sm" :md="row.cols.md">
+                                    <v-card flat rounded="lg" class="product-card fill-height">
+                                        <v-img :src="product.image" aspect-ratio="1" cover>
+                                            <div class="product-overlay d-flex flex-column justify-end pa-4">
+                                                <div class="product-title text-center text-body-1 mb-1">{{ product.name }}</div>
+                                                <v-rating :model-value="product.rating" color="amber" density="compact" size="small" half-increments readonly class="mx-auto mb-2"></v-rating>
+                                                <div class="text-h6 font-weight-bold text-center mb-4">Rp{{ product.price.toLocaleString('id-ID') }}</div>
+                                                <v-btn @click.stop="addToCart(product)" color="orange-darken-2" variant="flat" block prepend-icon="mdi-cart-plus">Beli</v-btn>
+                                            </div>
+                                        </v-img>
+                                    </v-card>
+                                </v-col>
+                            </v-row>
+                        </div>
+                    </div>
+                    <div v-else class="text-center text-grey-darken-1 mt-12">
+                        <v-icon size="64">mdi-package-variant-remove</v-icon>
+                        <p class="mt-4 text-h6">Oops! Mochi tidak ditemukan.</p>
+                        <p>Coba gunakan kata kunci lain.</p>
+                    </div>
+                </v-container>
+            </v-main>
+
+            <v-snackbar v-model="snackbar.show" :color="snackbar.color" timeout="3000" location="bottom left">
+                {{ snackbar.text }}
+                <template v-slot:actions>
+                    <v-btn variant="text" @click="snackbar.show = false">Tutup</v-btn>
+                </template>
+            </v-snackbar>
+        </v-app>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vuetify@3.6.10/dist/vuetify.min.js"></script>
+
+    <script type="module" src="main.js">
+        
+    </script>
+</body>
+</html>
